@@ -1,5 +1,6 @@
 package scalable.capital.test;
 
+import org.jsoup.nodes.Document;
 import org.junit.jupiter.api.Test;
 
 import java.util.Collections;
@@ -31,9 +32,9 @@ class MainTest {
     @Test
     void testGetPage() {
         final String uri = "http://foaas.com/version";
-        final Optional<String> page = main.getPage(uri);
+        final Optional<Document> page = main.getPage(uri);
 
         assertTrue(page.isPresent());
-        assertEquals("Version 1.2.0 FOAAS", page.get());
+        assertEquals("FOAAS - Version 1.2.0 - FOAAS", page.get().title());
     }
 }

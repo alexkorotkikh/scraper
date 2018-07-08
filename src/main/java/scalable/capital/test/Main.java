@@ -1,19 +1,23 @@
 package scalable.capital.test;
 
-import java.io.BufferedReader;
+import org.jsoup.Jsoup;
+import org.jsoup.nodes.Document;
+
 import java.io.IOException;
-import java.io.InputStreamReader;
 import java.net.*;
 import java.nio.charset.Charset;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
 import java.util.function.Function;
-import java.util.stream.Collector;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
 public class Main {
+    static final String USER_AGENT =
+            "Mozilla/5.0 (Windows NT 6.1; WOW64) AppleWebKit/537.36 " +
+                    "(KHTML, like Gecko) Chrome/45.0.2454.101 Safari/537.36";
+
     public static void main(String[] args) {
         final Main main = new Main();
 
@@ -23,8 +27,7 @@ public class Main {
         final var optSerp = main.getResultPage(query);
         final var serp = optSerp.orElseThrow(RuntimeException::new);
 
-        final var optUris = main.getUris(serp);
-        final var uris = optUris.orElseThrow(RuntimeException::new);
+        final var uris = main.getUris(serp);
 
         final Stream<Object> pages = uris.parallelStream()
                 .map(main::getPage)
@@ -46,39 +49,29 @@ public class Main {
         return args.length > 0 ? Optional.of(args[0]) : Optional.empty();
     }
 
-    Optional<String> getResultPage(String query) {
-        return getPage("http://google.com/?q=" + URLEncoder.encode(query, Charset.defaultCharset()));
+    Optional<Document> getResultPage(String query) {
+        final String encodedQuery = URLEncoder.encode(query, Charset.defaultCharset());
+        return getPage("http://google.com/search?q=" + encodedQuery);
     }
 
-    Optional<String> getPage(String uri) {
+    Optional<Document> getPage(String uri) {
         try {
-            URL url = new URL(uri);
-            HttpURLConnection con = (HttpURLConnection) url.openConnection();
-            con.setRequestMethod("GET");
-            con.setRequestProperty("Accept", "text/plain");
-
-            BufferedReader in = new BufferedReader(new InputStreamReader(con.getInputStream()));
-            String inputLine;
-            StringBuilder content = new StringBuilder();
-            while ((inputLine = in.readLine()) != null) {
-                content.append(inputLine);
-            }
-            in.close();
-
-            return Optional.of(content.toString());
+            final Document document = Jsoup.connect(uri).userAgent(USER_AGENT).get();
+            return Optional.of(document);
         } catch (IOException e) {
             e.printStackTrace();
         }
         return Optional.empty();
     }
 
-    private List<String> getJsLibs(Object o) {
-        return List.of();
+    List<String> getUris(Document serp) {
+        return serp.select("h3.r a").stream()
+                .map(a -> a.attr("href"))
+                .collect(Collectors.toList());
     }
 
-
-    private Optional<List<String>> getUris(Object serp) {
-        return Optional.empty();
+    private List<String> getJsLibs(Object o) {
+        return List.of();
     }
 
 
