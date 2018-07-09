@@ -10,7 +10,7 @@ import java.util.Optional;
 import static org.junit.jupiter.api.Assertions.*;
 
 class MainTest {
-    Main main = new Main();
+    private Main main = new Main();
 
     @Test
     void testQuery() {
@@ -36,5 +36,13 @@ class MainTest {
 
         assertTrue(page.isPresent());
         assertEquals("FOAAS - Version 1.2.0 - FOAAS", page.get().title());
+    }
+
+    @Test
+    void testGetResultPage() {
+        final Optional<Document> page = main.getResultPage("Scalable Capital");
+
+        assertTrue(page.isPresent());
+        assertTrue(page.get().title().contains("Scalable Capital"));
     }
 }
